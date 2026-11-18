@@ -1,0 +1,1303 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vinduespudser</title>
+<meta name="description" content="Kunder, månedens runde og rute for vinduespudsning.">
+<meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1216" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Runde">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+:root{
+  --bg:#f2f4f7; --card:#ffffff; --text:#14181f; --muted:#5d6675; --line:#dde2e9;
+  --accent:#0b6bcb; --accent-ink:#ffffff;
+  --ok:#1a8f4c; --ok-bg:#e3f5ea;
+  --warn:#b35c00; --warn-bg:#fff2dc;
+  --cash:#2e7d32; --cash-bg:#e4f3e5;
+  --mp:#3b5bdb; --mp-bg:#e6ebff;
+  --danger:#c62828;
+  --note-bg:#fff6cc; --note-ink:#5a4a00;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.06);
+  --radius:16px;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1216; --card:#1a1f26; --text:#eef1f5; --muted:#9aa4b2; --line:#2c333d;
+    --accent:#4c9bf0; --accent-ink:#06121f;
+    --ok:#4cc27e; --ok-bg:#15301f;
+    --warn:#ffb867; --warn-bg:#3a2a10;
+    --cash:#74d17a; --cash-bg:#1a2e1b;
+    --mp:#9aabff; --mp-bg:#1f2547;
+    --danger:#ff6b6b;
+    --note-bg:#38320f; --note-ink:#f3e7a6;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(84px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
+  min-height:100vh;
+}
+body.noscroll{overflow:hidden}
+body.is-dragging{user-select:none;-webkit-user-select:none}
+main{max-width:640px;margin:0 auto;padding:0 16px}
+h1{font-size:30px;line-height:1.1;margin:0;letter-spacing:-.02em}
+h2{font-size:18px;margin:0}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+[hidden]{display:none !important}
+
+/* Header */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:18px 0 14px}
+.top .sub{color:var(--muted);font-size:16px;margin-top:2px}
+
+/* Buttons */
+.btn{
+  appearance:none;border:0;border-radius:14px;min-height:50px;padding:0 18px;
+  font:inherit;font-weight:650;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--card);color:var(--accent);text-decoration:none;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;
+  touch-action:manipulation;
+}
+.btn:active{transform:scale(.98);opacity:.85}
+.btn[disabled],.btn[aria-disabled=true]{opacity:.5;pointer-events:none}
+.btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.btn-small{min-height:40px;font-size:15px;padding:0 14px;border-radius:12px}
+.btn-block{display:flex;width:100%}
+.btn-danger{color:var(--danger)}
+.btn svg{width:20px;height:20px;flex:none}
+.link{appearance:none;background:none;border:0;color:var(--accent);font:inherit;font-weight:600;padding:8px 4px;min-height:44px;cursor:pointer}
+.link.danger{color:var(--danger)}
+.row{display:flex;gap:10px}
+.row > *{flex:1}
+.stack > * + *{margin-top:10px}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);margin-bottom:12px}
+.empty{text-align:center;padding:28px 18px}
+.empty p{margin:0 0 16px;color:var(--muted)}
+.info,.reminder{border-radius:12px;padding:8px 12px;margin-bottom:12px;font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.info{background:var(--mp-bg);color:var(--text)}
+.reminder{background:var(--warn-bg);color:var(--text)}
+.info .link,.reminder .link{min-height:36px;padding:4px 0;white-space:nowrap}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--bg);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.warn b{color:var(--warn)}
+.stat.good b{color:var(--ok)}
+.progress{grid-column:1/-1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--ok);border-radius:4px}
+.split{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.split > div{border-radius:12px;padding:8px 12px}
+.split .c{background:var(--cash-bg)}
+.split .m{background:var(--mp-bg)}
+.split b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.split .lbl{font-size:13px;font-weight:700}
+.split .c .lbl{color:var(--cash)}
+.split .m .lbl{color:var(--mp)}
+.split small{display:block;font-size:12px;color:var(--muted)}
+
+/* Route */
+.routes{margin-top:8px}
+.route-link{justify-content:space-between;text-align:left;margin-top:8px;padding:10px 14px}
+.route-link small{display:block;font-weight:500;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
+
+/* Stops */
+.section-title{display:flex;justify-content:space-between;align-items:baseline;margin:18px 2px 8px}
+.section-title h2{font-size:20px}
+.stops{list-style:none;margin:0;padding:0}
+.stop{
+  background:var(--card);border-radius:var(--radius);padding:12px 10px 12px 6px;margin-bottom:10px;
+  box-shadow:var(--shadow);border-left:5px solid transparent;position:relative;
+}
+.stop.done{border-left-color:var(--ok)}
+.stop.done .stop-title{color:var(--muted)}
+.stop.dragging{z-index:5;box-shadow:0 12px 32px rgba(0,0,0,.28);transition:box-shadow .15s}
+.stop-top{display:flex;gap:6px;align-items:flex-start}
+.handle{
+  touch-action:none;flex:none;width:36px;min-height:48px;border:0;background:none;color:var(--muted);
+  display:grid;place-items:center;cursor:grab;padding:0;
+}
+.handle svg{width:22px;height:22px}
+.stop-main{flex:1;min-width:0;appearance:none;border:0;background:none;text-align:left;color:inherit;font:inherit;padding:2px 0;cursor:pointer}
+.stop-title{font-weight:700;font-size:18px;line-height:1.25;word-break:break-word}
+.stop-name{color:var(--muted);font-size:15px;margin-top:1px}
+.num{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:13px;background:var(--bg);font-size:13px;font-weight:700;margin-right:6px;vertical-align:2px;color:var(--text)}
+.arrows{display:flex;flex-direction:column;gap:4px;flex:none}
+.arrows button{width:42px;height:36px;border-radius:10px;border:0;background:var(--bg);color:var(--text);display:grid;place-items:center;padding:0}
+.arrows button:disabled{opacity:.3}
+.arrows svg{width:18px;height:18px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 0 42px}
+.price{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;margin-right:4px}
+.tag{font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--bg);color:var(--text);white-space:nowrap}
+.pay-cash{background:var(--cash-bg);color:var(--cash)}
+.pay-mp{background:var(--mp-bg);color:var(--mp)}
+.tag.off{background:var(--warn-bg);color:var(--warn)}
+.tag.fast{background:var(--ok-bg);color:var(--ok)}
+.tag.due{background:var(--warn-bg);color:var(--warn)}
+.chips{display:flex;gap:6px;margin:0 -16px 12px;padding:0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:15px;font-weight:650;border-radius:999px;padding:0 14px;min-height:40px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+select:not([multiple]){min-height:48px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:36px}
+.fast-box{background:var(--card);border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;margin-top:-8px;padding:4px 14px 12px}
+.fast-box label.f{margin-top:10px}
+.note{margin:8px 0 0 42px;background:var(--note-bg);color:var(--note-ink);padding:8px 10px;border-radius:10px;font-size:15px;white-space:pre-wrap;word-break:break-word}
+.stop-actions{display:flex;gap:8px;margin:12px 0 0 4px}
+.pill{
+  flex:1;min-width:0;min-height:50px;border-radius:14px;border:2px solid var(--line);background:var(--card);
+  font:inherit;font-weight:700;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px;padding:0 6px;cursor:pointer;touch-action:manipulation;
+}
+.pill .box{width:24px;height:24px;border-radius:7px;border:2px solid currentColor;display:grid;place-items:center;flex:none}
+.pill .box svg{width:16px;height:16px;opacity:0}
+.pill[aria-pressed=true]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.pill[aria-pressed=true] .box{background:var(--ok);border-color:var(--ok);color:#fff}
+.pill[aria-pressed=true] .box svg{opacity:1}
+.icon-btn{
+  flex:none;width:50px;min-height:50px;border-radius:14px;border:0;background:var(--bg);color:var(--accent);
+  display:grid;place-items:center;text-decoration:none;padding:0;cursor:pointer;touch-action:manipulation;
+}
+.icon-btn svg{width:22px;height:22px}
+.icon-btn.danger{color:var(--danger)}
+.round-foot{display:flex;justify-content:center;gap:16px;margin:6px 0 10px}
+
+/* Customers */
+.toolbar{display:flex;gap:10px;margin-bottom:10px}
+.toolbar .btn{flex:1}
+.search{position:relative;margin-bottom:12px}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
+.search input{padding-left:40px !important;margin:0 !important}
+.cust{display:block;width:100%;text-align:left;appearance:none;border:0;font:inherit;color:inherit;cursor:pointer}
+.cust .addr{font-weight:700;font-size:17px}
+.cust .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.cust .cnote{font-size:14px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cust.inactive{opacity:.6}
+.count{color:var(--muted);font-weight:500;font-size:16px}
+
+/* History */
+.hist{display:block;width:100%;text-align:left;appearance:none;border:0;font:inherit;color:inherit;cursor:pointer}
+.hist .hrow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.hist .hmonth{font-weight:700;font-size:18px}
+.hist .hsum{font-weight:700;font-variant-numeric:tabular-nums}
+.hist .hmeta{color:var(--muted);font-size:14px;margin:2px 0 8px}
+.hist .unpaid{font-size:14px;color:var(--warn);margin-top:8px}
+
+/* Forms */
+input[type=text],input[type=search],textarea,select{
+  width:100%;font:inherit;font-size:17px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);margin-top:6px;-webkit-appearance:none;appearance:none;
+}
+textarea{resize:vertical;min-height:90px}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.form label.f{display:block;font-weight:600;font-size:14px;color:var(--muted);margin:16px 0 0}
+.form .opt{font-weight:400}
+.form .err{color:var(--danger);font-size:14px;margin-top:4px}
+.suggested{border-color:#d9a400 !important;box-shadow:0 0 0 3px rgba(217,164,0,.22)}
+.hint{font-size:13px;color:var(--warn);margin-top:4px}
+.seg{border:0;padding:0;margin:16px 0 0;min-width:0}
+.seg legend{font-weight:600;font-size:14px;color:var(--muted);padding:0;margin-bottom:6px}
+.seg-opts{display:flex;background:var(--card);border-radius:12px;padding:4px;border:1px solid var(--line);gap:4px}
+.seg-opts label{flex:1;position:relative}
+.seg-opts input{position:absolute;opacity:0;pointer-events:none}
+.seg-opts span{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:9px;font-weight:650;color:var(--text);font-size:15px;text-align:center;padding:0 4px;cursor:pointer}
+.seg-opts input:checked + span{background:var(--accent);color:var(--accent-ink)}
+.seg-opts input:focus-visible + span{outline:2px solid var(--accent)}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:16px;cursor:pointer}
+.switch-row small{display:block;color:var(--muted);font-size:13px}
+.switch{appearance:none;-webkit-appearance:none;width:52px;height:32px;border-radius:16px;background:var(--line);position:relative;flex:none;margin:0;cursor:pointer;transition:background .15s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+.switch:checked{background:var(--ok)}
+.switch:checked::after{transform:translateX(20px)}
+.src{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;margin-top:12px}
+.src summary{font-weight:600;color:var(--muted);font-size:14px;cursor:pointer}
+.src p{white-space:pre-wrap;margin:8px 0 0;font-size:15px;word-break:break-word}
+.form-actions{margin-top:22px}
+
+/* Sheet */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:50;display:flex;align-items:flex-end;animation:fade .15s ease-out}
+.sheet{
+  background:var(--bg);width:100%;max-width:640px;margin:0 auto;
+  height:calc(100% - env(safe-area-inset-top) - 12px);border-radius:18px 18px 0 0;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding:0 16px calc(28px + env(safe-area-inset-bottom));animation:up .22s ease-out;
+}
+.sheet-head{position:sticky;top:0;background:var(--bg);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:6px 0;z-index:2;border-bottom:1px solid var(--line);margin:0 -16px;padding-left:12px;padding-right:12px}
+.sheet-head h2{text-align:center;font-size:17px}
+.sheet-head .link:first-child{justify-self:start}
+.sheet-head .link:last-child{justify-self:end}
+.strong{font-weight:750}
+.pick{display:flex;align-items:center;gap:10px}
+.pick .pmain{flex:1;min-width:0}
+.pick .addr{font-weight:700}
+.pick .muted{font-size:14px}
+@keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* Tabbar */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;
+  background:var(--card);border-top:1px solid var(--line);
+  padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.tabbar-inner{display:flex;width:100%;max-width:640px}
+.tab{flex:1;border:0;background:none;padding:8px 0 6px;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:inherit;font-size:11px;font-weight:650;color:var(--muted);position:relative;cursor:pointer;touch-action:manipulation}
+.tab svg{width:26px;height:26px}
+.tab[aria-current=page]{color:var(--accent)}
+.dot{position:absolute;top:8px;left:calc(50% + 9px);width:9px;height:9px;border-radius:5px;background:var(--warn);border:2px solid var(--card)}
+
+/* Toast */
+.toast{
+  position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;font-size:15px;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:80;max-width:calc(100% - 32px);text-align:center;
+}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast.has-action{pointer-events:auto;display:flex;align-items:center;gap:14px}
+.toast button{appearance:none;background:none;border:0;color:var(--accent);font:inherit;font-weight:750;padding:4px 0;min-height:36px;cursor:pointer}
+.ml-row{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:8px}
+.ml-row .pmain{flex:1;min-width:0}
+.ml-row .addr{font-weight:700}
+.ml-row.is-saved .addr{color:var(--muted)}
+.ml-check{flex:none;width:44px;height:44px;border:0;background:none;display:grid;place-items:center;color:var(--muted);padding:0;cursor:pointer}
+.ml-check .box{width:26px;height:26px;border-radius:8px;border:2px solid currentColor;display:grid;place-items:center}
+.ml-check .box svg{width:16px;height:16px;opacity:0}
+.ml-check[aria-pressed=true]{color:var(--ok)}
+.ml-check[aria-pressed=true] .box{background:var(--ok);border-color:var(--ok);color:#fff}
+.ml-check[aria-pressed=true] .box svg{opacity:1}
+.nm-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.nm-row:last-child{border-bottom:0}
+.steps{margin:6px 0 0;padding-left:22px}
+.steps li{margin:2px 0}
+</style>
+</head>
+<body>
+<main id="view" aria-live="polite"></main>
+
+<nav class="tabbar" aria-label="Menu">
+  <div class="tabbar-inner">
+    <button class="tab" data-tab="runde">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg>
+      Runde
+    </button>
+    <button class="tab" data-tab="kunder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Kunder
+    </button>
+    <button class="tab" data-tab="historik">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
+      Historik
+    </button>
+    <button class="tab" data-tab="backup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.6A5 5 0 0 0 18 7h-1.3A8 8 0 1 0 4 15.3"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+      Mere
+      <span class="dot" id="backupDot" hidden></span>
+    </button>
+  </div>
+</nav>
+
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="importFile" hidden>
+
+<script>
+(function () {
+'use strict';
+
+/* ---------- Konstanter og hjælpere ---------- */
+const KEY = 'vinduespudser:v1';
+const SIDES = ['Ude', 'Inde', 'Inde + ude'];
+const PAYS = ['Kontant', 'MobilePay'];
+const BACKUP_DAYS = 30;
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const fmtNum = n => Number(n || 0).toLocaleString('da-DK', { maximumFractionDigits: 2 });
+const kr = n => fmtNum(n) + ' kr';
+const pad = n => String(n).padStart(2, '0');
+const monthKey = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1);
+const todayStr = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const cap1 = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const monthName = k => {
+  const [y, m] = k.split('-').map(Number);
+  return cap1(new Date(y, m - 1, 1).toLocaleDateString('da-DK', { month: 'long', year: 'numeric' }));
+};
+const addMonths = (k, n) => { const [y, m] = k.split('-').map(Number); return monthKey(new Date(y, m - 1 + n, 1)); };
+const monthShort = k => { const [y, m] = k.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('da-DK', { month: 'short', year: 'numeric' }); };
+const intervalLabel = n => n === 1 ? 'hver måned' : `hver ${n}. måned`;
+const fmtDate = iso => new Date(iso).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+const daysSince = iso => (Date.now() - new Date(iso).getTime()) / 864e5;
+const normAddr = s => String(s || '').toLowerCase().replace(/[^a-z0-9æøåéü]/g, '');
+
+function toNum(v) {
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  let s = String(v ?? '').replace(/kr\.?|dkk|kroner|,-|\.-/gi, '').replace(/\s/g, '');
+  s = s.replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
+  const n = parseFloat(s);
+  return isFinite(n) && n >= 0 ? n : 0;
+}
+
+const ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  grip: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  ext: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>'
+};
+
+/* ---------- Data ---------- */
+function emptyDb() {
+  return { version: 1, createdAt: new Date().toISOString(), lastBackup: null, settings: { area: '' }, customers: [], rounds: {} };
+}
+function normCustomer(c) {
+  return {
+    id: String(c.id || uid()),
+    name: String(c.name || '').trim(),
+    address: String(c.address || '').trim(),
+    price: toNum(c.price),
+    side: SIDES.includes(c.side) ? c.side : 'Ude',
+    payment: PAYS.includes(c.payment) ? c.payment : 'Kontant',
+    note: String(c.note || '').trim(),
+    active: c.active !== false,
+    fast: !!c.fast,
+    interval: Math.min(12, Math.max(1, parseInt(c.interval, 10) || 1)),
+    nextMonth: /^\d{4}-\d{2}$/.test(c.nextMonth || '') ? c.nextMonth : null,
+    createdAt: c.createdAt || new Date().toISOString()
+  };
+}
+function normStop(s) {
+  const c = normCustomer(s);
+  const out = {
+    id: String(s.id || uid()), customerId: s.customerId ? String(s.customerId) : null,
+    name: c.name, address: c.address, price: c.price, side: c.side, payment: c.payment, note: c.note,
+    cleaned: !!s.cleaned, paid: !!s.paid, mapSaved: !!s.mapSaved
+  };
+  if (s.prevNext !== undefined) out.prevNext = /^\d{4}-\d{2}$/.test(s.prevNext || '') ? s.prevNext : null;
+  return out;
+}
+function normalize(d) {
+  if (!d || typeof d !== 'object' || !Array.isArray(d.customers)) throw new Error('Ugyldig fil');
+  const out = emptyDb();
+  if (d.createdAt) out.createdAt = d.createdAt;
+  out.lastBackup = d.lastBackup || null;
+  out.settings = { area: String((d.settings && d.settings.area) || '') };
+  out.customers = d.customers.map(normCustomer);
+  if (d.rounds && typeof d.rounds === 'object') {
+    for (const [k, r] of Object.entries(d.rounds)) {
+      if (!/^\d{4}-\d{2}$/.test(k) || !r) continue;
+      out.rounds[k] = { month: k, createdAt: r.createdAt || out.createdAt, stops: Array.isArray(r.stops) ? r.stops.map(normStop) : [] };
+    }
+  }
+  return out;
+}
+function load() {
+  let raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) { /* ignore */ }
+  if (!raw) return emptyDb();
+  try { return normalize(JSON.parse(raw)); }
+  catch (e) {
+    try { localStorage.setItem(KEY + ':beskadiget-' + Date.now(), raw); } catch (_) { /* ignore */ }
+    return emptyDb();
+  }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(db)); return true; }
+  catch (e) { alert('Kunne ikke gemme på telefonen. Tag en backup med det samme.'); return false; }
+}
+
+let db = load();
+function newestRound() { const k = Object.keys(db.rounds).sort(); return k.length ? k[k.length - 1] : null; }
+function defaultMonth() { return newestRound() || monthKey(); }
+const ui = { custFilter: 'alle', tab: 'runde', viewMonth: defaultMonth(), search: '' };
+
+const custById = id => db.customers.find(c => c.id === id);
+const curRound = () => db.rounds[ui.viewMonth];
+const custLabel = c => c.name ? c.name + ' – ' + c.address : c.address;
+
+function stopFromCustomer(c) {
+  return { id: uid(), customerId: c.id, name: c.name, address: c.address, price: c.price, side: c.side, payment: c.payment, note: c.note, cleaned: false, paid: false };
+}
+function syncCustomerToRound(c) {
+  const r = db.rounds[monthKey()];
+  if (!r) return;
+  for (const s of r.stops) {
+    if (s.customerId === c.id) Object.assign(s, { name: c.name, address: c.address, price: c.price, side: c.side, payment: c.payment, note: c.note });
+  }
+}
+
+function stats(r) {
+  const st = { n: 0, cleaned: 0, total: 0, paid: 0, unpaid: 0, cash: 0, cashUnpaid: 0, mp: 0, mpUnpaid: 0, unpaidStops: [] };
+  for (const s of r.stops) {
+    st.n++;
+    if (s.cleaned) st.cleaned++;
+    st.total += s.price;
+    if (s.payment === 'MobilePay') st.mp += s.price; else st.cash += s.price;
+    if (s.paid) st.paid += s.price;
+    else {
+      st.unpaid += s.price;
+      if (s.payment === 'MobilePay') st.mpUnpaid += s.price; else st.cashUnpaid += s.price;
+      if (s.cleaned) st.unpaidStops.push(s);
+    }
+  }
+  return st;
+}
+
+function isDue(c, key) { return !c.fast || !c.nextMonth || c.nextMonth <= key; }
+function fastTag(c) {
+  if (!c.fast) return '';
+  const due = c.nextMonth && c.nextMonth <= monthKey();
+  return `<span class="tag fast">Fast · ${intervalLabel(c.interval)}</span>` +
+    (c.nextMonth ? `<span class="tag ${due ? 'due' : ''}">Næste: ${esc(monthShort(c.nextMonth))}</span>` : '');
+}
+function toggleClean(stop, r) {
+  stop.cleaned = !stop.cleaned;
+  const c = custById(stop.customerId);
+  if (!c || !c.fast) return;
+  if (stop.cleaned) {
+    stop.prevNext = c.nextMonth || null;
+    const nxt = addMonths(r.month, c.interval);
+    if (!c.nextMonth || nxt > c.nextMonth) c.nextMonth = nxt;
+  } else if (stop.prevNext !== undefined) {
+    c.nextMonth = stop.prevNext;
+    delete stop.prevNext;
+  }
+}
+
+function backupDue() {
+  if (!db.customers.length && !Object.keys(db.rounds).length) return false;
+  return daysSince(db.lastBackup || db.createdAt) > BACKUP_DAYS;
+}
+
+/* ---------- Google Maps ---------- */
+function mapsAddr(a) {
+  let s = a;
+  const area = ((db.settings && db.settings.area) || '').trim();
+  if (area && !/(^|\D)\d{4}(\D|$)/.test(s) && !s.toLowerCase().includes(area.toLowerCase())) s += ', ' + area;
+  return /danmark|denmark/i.test(s) ? s : s + ', Danmark';
+}
+function placeUrl(a) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapsAddr(a)); }
+
+/* ---------- Tolkning af Messenger-tekst ---------- */
+const L = 'A-Za-zÆØÅæøåÉéÜüÖöÄä';
+const SUFFIX_WORDS = 'vej|vejen|gade|gaden|allé|alle|alléen|vænge|vænget|stræde|strædet|plads|pladsen|park|parken|torv|torvet|bakke|bakken|bakkerne|toft|toften|have|haven|haverne|høj|højen|højene|holm|holmen|sti|stien|boulevard|eng|engen|enge|marken|mark|lund|lunden|skov|skoven|bjerg|bjerget|dal|dalen|hegn|hegnet|gård|gården|kær|kæret|mose|mosen|ager|ageren|agre|løkke|løkken|krog|krogen|vang|vangen|strand|stranden|kilde|kilden|banke|banken|kamp|kampen|vig|vigen|næs|næsset|vold|volden|kaj|kajen|brink|brinken|dige|diget|gyde|gyden|passage|ring|ringen|kvarter|kvarteret|hus|huse|tofte|toften|grund|vængerne|kløver|parkvej|tværvej'.split('|');
+const SUFFIX = '(?:' + SUFFIX_WORDS.concat(SUFFIX_WORDS.map(cap1)).sort((a, b) => b.length - a.length).join('|') + ')';
+const NUM = '(\\d{1,4}(?:[A-Za-z]|\\s[A-Z])?)(?![' + L + '\\d])(?!\\s*(?:kr|,-|\\.-|kroner|dkk|DKK|%|stk|vindue|rude|gange|min|timer|m2|kvm))';
+const FLOOR = '(?:,?\\s*((?:st|kl|\\d{1,2}(?!\\d))\\.\\s*(?:sal\\.?\\s*)?(?:,?\\s*(?:th|tv|mf)\\.?)?|(?:st|kl|\\d{1,2}(?!\\d))\\s*(?:sal\\.?\\s*)?,?\\s*(?:th|tv|mf)\\b\\.?))?';
+const POST = '(?:,?\\s*(?:DK-?)?(\\d{4})(?!\\d)\\s+([A-ZÆØÅ][' + L + '\\-]+(?:[\\s\\-][A-ZÆØÅ][' + L + '\\-]+)?(?:\\s[ØNSVCK](?![' + L + ']))?))?';
+const PRE = '((?:[A-ZÆØÅ0-9][' + L + '.\\-]*\\.?\\s+){0,3}';
+const TOWN = '(?:,\\s*([A-ZÆØÅ][' + L + '\\-]+)(?=\\s*(?:[.!?,\\n]|$)))?';
+const RE_SUFFIX = new RegExp(PRE + '[' + L + '\\-]*' + SUFFIX + ')\\s+' + NUM + FLOOR + POST + TOWN, 'g');
+const RE_GENERIC = new RegExp('([A-ZÆØÅ][' + L + '\\-]+(?:\\s+[A-ZÆØÅ][' + L + '\\-]+){0,2})\\s+' + NUM + FLOOR + POST.replace(/\)\?$/, ')'), 'g');
+
+function findAddress(text) {
+  const cands = [];
+  for (const [re, base] of [[RE_SUFFIX, 2], [RE_GENERIC, 0]]) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text))) {
+      if (m.index > 0 && new RegExp('[' + L + '\\d]').test(text[m.index - 1])) continue;
+      let street = m[1].trim().replace(/\s+/g, ' ');
+      // Fjern indledende fyldord ("Jeg", "Hej", ...)
+      street = street.replace(/^(?:(?:hej|hejsa|jeg|vi|det|adressen|adresse|på|i|er|bor|min|vores|og|så)\s+)+/i, '');
+      if (!street) continue;
+      let addr = cap1(street) + ' ' + m[2].replace(/\s+/, '');
+      if (m[3]) addr += ', ' + m[3].replace(/\s+/g, ' ').replace(/\s*,\s*/g, ' ').trim();
+      if (m[4]) addr += ', ' + m[4] + ' ' + m[5];
+      else if (m[6] && !/^(?:mvh|vh|hilsen|tak|hej)$/i.test(m[6])) addr += ', ' + m[6];
+      const score = base + (m[4] ? 3 : 0) + (m[3] ? 0.5 : 0);
+      cands.push({ addr, score, start: m.index, end: m.index + m[0].length });
+    }
+  }
+  cands.sort((a, b) => b.score - a.score || a.start - b.start);
+  return cands[0] || null;
+}
+
+function findPrice(text, span) {
+  const pats = [
+    /(\d{1,3}(?:\.\d{3})+|\d{2,5})(?:[.,]\d{1,2})?\s*(?:kr\b\.?|kroner|dkk|,-|\.-)/gi,
+    /(?:kr\.?|dkk)\s*(\d{1,3}(?:\.\d{3})+|\d{2,5})(?!\d)/gi,
+    /(?:pris(?:en)?|koster|betaler|betale|giver|aftalt|plejer)\D{0,14}?(\d{1,3}(?:\.\d{3})+|\d{2,5})(?!\d)/gi
+  ];
+  for (const re of pats) {
+    let m;
+    while ((m = re.exec(text))) {
+      if (span && m.index >= span.start && m.index < span.end) continue;
+      const n = toNum(m[1]);
+      if (n >= 20 && n <= 20000) return n;
+    }
+  }
+  return null;
+}
+
+function parseMessage(text) {
+  const t = String(text || '').replace(/ /g, ' ');
+  const found = {};
+  const fields = { side: 'Ude', payment: 'Kontant' };
+
+  const a = findAddress(t);
+  if (a) { fields.address = a.addr; found.address = true; }
+
+  const p = findPrice(t, a);
+  if (p != null) { fields.price = p; found.price = true; }
+
+  if (/inde\s*(?:og|\+|&|\/)\s*ude|ude\s*(?:og|\+|&|\/)\s*inde|indvendig\w*\s*(?:og|\+|&)\s*udvendig|udvendig\w*\s*(?:og|\+|&)\s*indvendig|begge sider|ind- og udvendig|ud- og indvendig/i.test(t)) { fields.side = 'Inde + ude'; found.side = true; }
+  else if (/indvendig|indefra|\binde\b/i.test(t)) { fields.side = 'Inde'; found.side = true; }
+  else if (/udvendig|udefra|\bude\b/i.test(t)) { fields.side = 'Ude'; found.side = true; }
+
+  if (/mobile\s*pay|\bmp\b/i.test(t)) { fields.payment = 'MobilePay'; found.payment = true; }
+  else if (/kontant|cash|\bkontanter\b/i.test(t)) { fields.payment = 'Kontant'; found.payment = true; }
+
+  const nm = t.match(/(?:jeg hedder|mit navn er|navn:|hilsen|mvh\.?|vh\.?|venlig hilsen)\s*[,:]?\s*([A-ZÆØÅ][a-zæøåé]+(?:[ \-][A-ZÆØÅ][a-zæøåé]+){0,2})/);
+  if (nm) { fields.name = nm[1]; found.name = true; }
+
+  // Notelinjer: sætninger med praktiske oplysninger
+  const NOTE_RE = /nøgl|\bkl\.?\s*\d|klokken|efter\s+\d|inden|tidsrum|tidspunkt|formiddag|eftermiddag|morgen|aften|weekend|hverdag|mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag|hund|\bkat\b|låge|\bport\b|kode|penge|kuvert|postkass|under måtten|ringe|ring\s|ikke hjemme|hjemme|stige|ovenlys|karnap|udestue|drivhus|carport|\d\.\s*sal|bag(?:dør|indgang)/i;
+  const parts = t.replace(/([.!?])\s+/g, '$1\n').split(/\n+/).map(s => s.trim()).filter(Boolean);
+  const noteParts = parts.filter(s => NOTE_RE.test(s) && !(a && s.includes(a.addr.split(',')[0])));
+  if (noteParts.length) { fields.note = noteParts.join(' ').slice(0, 400); found.note = true; }
+
+  return { fields, found };
+}
+
+/* ---------- Visninger ---------- */
+function render() {
+  document.querySelectorAll('.tab').forEach(b => {
+    if (b.dataset.tab === ui.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  $('#backupDot').hidden = !backupDue();
+  const v = $('#view');
+  if (ui.tab === 'runde') v.innerHTML = viewRunde();
+  else if (ui.tab === 'kunder') v.innerHTML = viewKunder();
+  else if (ui.tab === 'historik') v.innerHTML = viewHistorik();
+  else v.innerHTML = viewBackup();
+}
+
+function reminderHtml() {
+  if (!backupDue()) return '';
+  const when = db.lastBackup ? 'Over ' + BACKUP_DAYS + ' dage siden sidste backup.' : 'Du har ikke taget backup endnu.';
+  return `<div class="reminder"><span>${when}</span><button class="link" data-act="export">Tag backup</button></div>`;
+}
+
+function viewRunde() {
+  const key = ui.viewMonth;
+  const r = db.rounds[key];
+  const newest = newestRound();
+  let h = `<header class="top"><div><h1>Runde</h1><div class="sub">${esc(monthName(key))}</div></div>
+    <button class="btn btn-small" data-act="new-month">Ny måned</button></header>`;
+  if (r && newest && key !== newest) h += `<div class="info"><span>Du ser en ældre runde.</span><button class="link" data-act="goto-current">Gå til ${esc(monthName(newest).toLowerCase())}</button></div>`;
+  h += reminderHtml();
+
+  if (!r) {
+    h += `<section class="card empty">
+      <p>Der er ingen runde endnu.</p>
+      ${db.customers.length
+        ? `<button class="btn btn-primary btn-block" data-act="new-month">Ny måned</button>
+           <p class="small" style="margin:10px 0 0">Vælg måneden. De faste kunder, der er på tur, kommer med af sig selv.</p>`
+        : `<p>Opret først dine kunder under <b>Kunder</b>.</p><button class="btn btn-primary btn-block" data-act="goto-tab" data-tab="kunder">Gå til kunder</button>`}
+    </section>`;
+    return h;
+  }
+
+  const st = stats(r);
+  const pct = st.n ? Math.round(st.cleaned / st.n * 100) : 0;
+  h += `<section class="card stats" aria-label="Status">
+    <div class="stat"><b>${st.n}</b><span>stop</span></div>
+    <div class="stat ${st.n && st.cleaned === st.n ? 'good' : ''}"><b>${st.cleaned}/${st.n}</b><span>pudset</span></div>
+    <div class="stat"><b>${kr(st.total)}</b><span>i alt</span></div>
+    <div class="stat ${st.unpaid ? 'warn' : 'good'}"><b>${kr(st.unpaid)}</b><span>mangler betaling</span></div>
+    <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+    <div class="split">
+      <div class="c"><span class="lbl">Kontant</span><b>${kr(st.cash)}</b><small>${st.cashUnpaid ? 'mangler ' + kr(st.cashUnpaid) : 'alt betalt'}</small></div>
+      <div class="m"><span class="lbl">MobilePay</span><b>${kr(st.mp)}</b><small>${st.mpUnpaid ? 'mangler ' + kr(st.mpUnpaid) : 'alt betalt'}</small></div>
+    </div>
+  </section>`;
+
+  const saved = r.stops.filter(x => x.mapSaved).length;
+  h += `<button class="btn btn-primary btn-block" data-act="maps-list" ${r.stops.length ? '' : 'disabled'}>${ICON.map} Gem på liste i Google Maps <span style="font-weight:500;opacity:.85">${saved}/${r.stops.length}</span></button>`;
+
+  h += `<div class="section-title"><h2>Stop</h2><span class="muted small">Træk i ⋮⋮ for at flytte</span></div>`;
+  if (!r.stops.length) h += `<section class="card empty"><p>Runden er tom.</p></section>`;
+  h += `<ol class="stops" id="stops">${r.stops.map((s, i) => stopHtml(s, i, r.stops.length)).join('')}</ol>`;
+  h += `<button class="btn btn-block" data-act="add-stop">${ICON.plus} Tilføj stop</button>`;
+  h += `<div class="round-foot"><button class="link danger" data-act="delete-round">Slet runden</button></div>`;
+  return h;
+}
+
+function stopHtml(s, i, n) {
+  const payCls = s.payment === 'MobilePay' ? 'pay-mp' : 'pay-cash';
+  return `<li class="stop ${s.cleaned ? 'done' : ''}" data-id="${esc(s.id)}">
+    <div class="stop-top">
+      <button class="handle" aria-label="Træk for at flytte">${ICON.grip}</button>
+      <button class="stop-main" data-act="edit-stop-customer">
+        <div class="stop-title"><span class="num">${i + 1}</span>${esc(s.address || '(ingen adresse)')}</div>
+        ${s.name ? `<div class="stop-name">${esc(s.name)}</div>` : ''}
+      </button>
+      <div class="arrows">
+        <button data-act="up" aria-label="Flyt op" ${i === 0 ? 'disabled' : ''}>${ICON.up}</button>
+        <button data-act="down" aria-label="Flyt ned" ${i === n - 1 ? 'disabled' : ''}>${ICON.down}</button>
+      </div>
+    </div>
+    <div class="tags">
+      <span class="price">${kr(s.price)}</span>
+      <span class="tag ${payCls}">${esc(s.payment)}</span>
+      <span class="tag">${esc(s.side)}</span>
+    </div>
+    ${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}
+    <div class="stop-actions">
+      <button class="pill" data-act="clean" aria-pressed="${s.cleaned}"><span class="box">${ICON.check}</span>Pudset</button>
+      <button class="pill" data-act="paid" aria-pressed="${s.paid}"><span class="box">${ICON.check}</span>Betalt</button>
+      <a class="icon-btn" href="${esc(placeUrl(s.address))}" target="_blank" rel="noopener" aria-label="Åbn adressen i Google Maps">${ICON.pin}</a>
+      <button class="icon-btn danger" data-act="remove" aria-label="Fjern fra runden">${ICON.x}</button>
+    </div>
+  </li>`;
+}
+
+const FILTERS = [['alle', 'Alle'], ['aktive', 'Aktive'], ['faste', 'Faste'], ['tur', 'På tur nu'], ['inaktive', 'Inaktive']];
+function filterOk(c) {
+  switch (ui.custFilter) {
+    case 'aktive': return c.active;
+    case 'faste': return c.fast;
+    case 'tur': return c.active && c.fast && isDue(c, monthKey());
+    case 'inaktive': return !c.active;
+    default: return true;
+  }
+}
+function viewKunder() {
+  const active = db.customers.filter(c => c.active).length;
+  const fast = db.customers.filter(c => c.fast).length;
+  return `<header class="top"><div><h1>Kunder <span class="count">${db.customers.length}</span></h1>
+      <div class="sub">${active} aktive · ${fast} faste</div></div></header>
+    <div class="toolbar">
+      <button class="btn btn-primary" data-act="new-customer">${ICON.plus} Ny kunde</button>
+      <button class="btn" data-act="quick-add">${ICON.bolt} Hurtig tilføj</button>
+    </div>
+    <div class="search">${ICON.search}<input type="search" id="custSearch" placeholder="Søg navn, adresse eller note" value="${esc(ui.search)}" autocomplete="off" enterkeyhint="search"></div>
+    <div class="chips">${FILTERS.map(([k, l]) => `<button class="chip" data-act="cust-filter" data-f="${k}" aria-pressed="${ui.custFilter === k}">${l}</button>`).join('')}</div>
+    <div id="custList">${custListHtml()}</div>`;
+}
+
+function matches(c, q) {
+  if (!q) return true;
+  const hay = (c.name + ' ' + c.address + ' ' + c.note + ' ' + c.payment + ' ' + c.side).toLowerCase();
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every(w => hay.includes(w));
+}
+function sortCustomers(list) {
+  return list.slice().sort((a, b) => (b.active - a.active) || a.address.localeCompare(b.address, 'da', { numeric: true }));
+}
+function custListHtml() {
+  if (!db.customers.length) {
+    return `<section class="card empty"><p>Ingen kunder endnu.<br>Tryk <b>Ny kunde</b> eller <b>Hurtig tilføj</b> for at sætte en besked ind fra Messenger.</p></section>`;
+  }
+  const list = sortCustomers(db.customers.filter(c => filterOk(c) && matches(c, ui.search)));
+  if (!list.length) return `<p class="muted" style="text-align:center">Ingen kunder her${ui.search ? ' matcher “' + esc(ui.search) + '”' : ''}.</p>`;
+  return list.map(c => `<button class="card cust ${c.active ? '' : 'inactive'}" data-act="open-customer" data-id="${esc(c.id)}">
+      <div class="addr">${esc(c.address)}</div>
+      ${c.name ? `<div class="muted">${esc(c.name)}</div>` : ''}
+      <div class="meta"><span class="price" style="font-size:17px">${kr(c.price)}</span>
+        <span class="tag ${c.payment === 'MobilePay' ? 'pay-mp' : 'pay-cash'}">${esc(c.payment)}</span>
+        <span class="tag">${esc(c.side)}</span>
+        ${c.active ? '' : '<span class="tag off">Inaktiv</span>'}${fastTag(c)}</div>
+      ${c.note ? `<div class="cnote">${esc(c.note)}</div>` : ''}
+    </button>`).join('');
+}
+
+function viewHistorik() {
+  const keys = Object.keys(db.rounds).sort().reverse();
+  let h = `<header class="top"><div><h1>Historik</h1><div class="sub">${keys.length} ${keys.length === 1 ? 'måned' : 'måneder'}</div></div></header>`;
+  if (!keys.length) return h + `<section class="card empty"><p>Når du har lavet din første runde med <b>Ny måned</b>, vises den her.</p></section>`;
+  const cur = monthKey();
+  let oldUnpaid = 0;
+  for (const k of keys) if (k !== cur) oldUnpaid += stats(db.rounds[k]).unpaidStops.reduce((a, s) => a + s.price, 0);
+  if (oldUnpaid) h += `<div class="reminder"><span>Pudset, men ikke betalt i tidligere måneder: <b>${kr(oldUnpaid)}</b></span></div>`;
+  h += keys.map(k => {
+    const st = stats(db.rounds[k]);
+    const pct = st.n ? Math.round(st.cleaned / st.n * 100) : 0;
+    const up = st.unpaidStops;
+    return `<button class="card hist" data-act="open-month" data-month="${k}">
+      <div class="hrow"><span class="hmonth">${esc(monthName(k))}${k === cur ? ' <span class="tag pay-mp">Nu</span>' : ''}</span><span class="hsum">${kr(st.total)}</span></div>
+      <div class="hmeta">${st.cleaned}/${st.n} pudset · kontant ${kr(st.cash)} · MobilePay ${kr(st.mp)}</div>
+      <div class="progress"><i style="width:${pct}%"></i></div>
+      ${up.length ? `<div class="unpaid">Mangler betaling: ${up.map(s => esc(s.name || s.address) + ' (' + kr(s.price) + ')').join(', ')}</div>` : ''}
+    </button>`;
+  }).join('');
+  return h;
+}
+
+function viewBackup() {
+  const active = db.customers.filter(c => c.active).length;
+  const rounds = Object.keys(db.rounds).length;
+  const last = db.lastBackup
+    ? `<b>${esc(fmtDate(db.lastBackup))}</b> (${Math.floor(daysSince(db.lastBackup))} dage siden)`
+    : '<b>Aldrig</b>';
+  return `<header class="top"><div><h1>Mere</h1><div class="sub">Sidste backup: ${last}</div></div></header>
+    ${reminderHtml()}
+    <section class="card stack">
+      <button class="btn btn-primary btn-block" data-act="export">Eksportér backup</button>
+      <p class="muted small" style="margin:6px 2px 0">På iPhone åbner delingsmenuen. Vælg at gemme i appen <b>Arkiver</b> (Filer), fx på iCloud Drive.</p>
+      <button class="btn btn-block" data-act="import">Importér backup</button>
+      <p class="muted small" style="margin:6px 2px 0">Vælg en backupfil (.json). Den erstatter alle data i appen.</p>
+    </section>
+    <section class="card">
+      <h2>Google Maps</h2>
+      <label class="form" style="display:block"><span class="muted small">By/postnummer, der sættes på adresser uden postnummer, så Maps finder den rigtige by. Fx “8260 Viby J”.</span>
+        <input type="text" id="areaInput" value="${esc(db.settings.area)}" placeholder="Fx 8260 Viby J" autocomplete="off" enterkeyhint="done"></label>
+    </section>
+    <section class="card">
+      <h2 style="margin-bottom:6px">Data i appen</h2>
+      <p class="muted" style="margin:0">${db.customers.length} kunder (${active} aktive) · ${rounds} ${rounds === 1 ? 'runde' : 'runder'}</p>
+      <p class="muted small">Alt gemmes kun på denne telefon. Hvis du sletter appen fra hjemmeskærmen eller rydder Safaris websitedata, forsvinder det. Derfor er backup vigtig.</p>
+    </section>`;
+}
+
+/* ---------- Ark (bottom sheets) ---------- */
+function openSheet(html) {
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  document.body.appendChild(ov);
+  document.body.classList.add('noscroll');
+  const close = () => {
+    ov.remove();
+    if (!document.querySelector('.overlay')) document.body.classList.remove('noscroll');
+  };
+  ov.addEventListener('click', e => {
+    if (e.target === ov || e.target.closest('[data-close]')) close();
+  });
+  return { el: ov.firstElementChild, close };
+}
+
+function segHtml(name, label, opts, val) {
+  return `<fieldset class="seg"><legend>${label}</legend><div class="seg-opts">${opts.map(o =>
+    `<label><input type="radio" name="${name}" value="${esc(o)}" ${o === val ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div></fieldset>`;
+}
+
+function openCustomerForm(c, opts = {}) {
+  const isNew = !c;
+  const d = Object.assign({ name: '', address: '', price: '', side: 'Ude', payment: 'Kontant', note: '', active: true }, c || {}, opts.prefill || {});
+  const sug = opts.found || {};
+  const cls = k => sug[k] ? 'suggested' : '';
+  const title = isNew ? 'Ny kunde' : 'Redigér kunde';
+  const { el, close } = openSheet(`
+    <div class="sheet-head"><button class="link" data-close>Annullér</button><h2>${title}</h2><button class="link strong" data-save>Gem</button></div>
+    <form class="form" novalidate autocomplete="off">
+      ${opts.source ? `<details class="src" open><summary>Beskeden fra Messenger</summary><p>${esc(opts.source)}</p>
+        <button type="button" class="link" data-use-note>Brug hele beskeden som note</button></details>
+        <p class="hint">${Object.keys(sug).length ? 'Felter med gul kant er forslag – tjek dem, før du gemmer.' : 'Jeg kunne ikke finde adresse eller pris – udfyld selv.'}</p>` : ''}
+      <label class="f">Navn <span class="opt">(valgfrit)</span><input type="text" name="name" value="${esc(d.name)}" class="${cls('name')}" enterkeyhint="next" autocapitalize="words"></label>
+      <label class="f">Adresse<input type="text" name="address" value="${esc(d.address)}" class="${cls('address')}" enterkeyhint="next" autocapitalize="words" placeholder="Fx Skovvej 12, 4000 Roskilde"></label>
+      <div class="err" data-err="address" hidden>Skriv en adresse.</div>
+      <label class="f">Pris (kr)<input type="text" name="price" value="${d.price === '' ? '' : esc(fmtNum(d.price))}" class="${cls('price')}" inputmode="decimal" enterkeyhint="done" placeholder="0"></label>
+      ${segHtml('side', 'Inde/ude', SIDES, d.side)}
+      ${segHtml('payment', 'Betaling', PAYS, d.payment)}
+      <label class="f">Note <span class="opt">(tidsrum, nøgle, hvor pengene ligger …)</span><textarea name="note" rows="3" class="${cls('note')}">${esc(d.note)}</textarea></label>
+      <label class="switch-row"><span>Aktiv kunde<small>Slå fra for kunder, du ikke pudser længere. Inaktive kunder kommer ikke med automatisk og står sidst i listerne.</small></span><input type="checkbox" class="switch" name="active" ${d.active ? 'checked' : ''}></label>
+      <label class="switch-row"><span>Fast kunde<small>Kommer automatisk med i “Ny måned”, når det er deres tur.</small></span><input type="checkbox" class="switch" name="fast" ${d.fast ? 'checked' : ''}></label>
+      <div class="fast-box" ${d.fast ? '' : 'hidden'}>
+        <label class="f">Hvor tit?<select name="interval">${[1,2,3,4,5,6,7,8,9,10,11,12].map(n => `<option value="${n}" ${n === (d.interval || 1) ? 'selected' : ''}>${cap1(intervalLabel(n))}</option>`).join('')}</select></label>
+        <label class="f">Næste gang<select name="nextMonth">${monthOptions(d.nextMonth || defaultNext(c))}</select></label>
+        <p class="muted small" style="margin:8px 0 0">Når du sætter flueben i “Pudset”, rykker “Næste gang” selv frem.</p>
+      </div>
+      <div class="form-actions stack">
+        <button type="submit" class="btn btn-primary btn-block">${opts.addToRound ? 'Gem og tilføj til runden' : 'Gem'}</button>
+        ${isNew ? '' : '<button type="button" class="btn btn-block btn-danger" data-delete>Slet kunde</button>'}
+      </div>
+    </form>`);
+  const form = el.querySelector('form');
+  form.addEventListener('input', e => e.target.classList.remove('suggested'));
+  form.fast.addEventListener('change', () => {
+    el.querySelector('.fast-box').hidden = !form.fast.checked;
+    if (form.fast.checked) form.active.checked = true;
+  });
+  form.addEventListener('change', e => { const s = e.target.closest('.seg'); if (s) s.querySelectorAll('.suggested').forEach(x => x.classList.remove('suggested')); });
+  const useNote = el.querySelector('[data-use-note]');
+  if (useNote) useNote.addEventListener('click', () => { form.note.value = opts.source.trim(); form.note.classList.remove('suggested'); });
+
+  const doSave = () => {
+    const f = form;
+    const data = {
+      name: f.name.value.trim(), address: f.address.value.trim().replace(/\s+/g, ' '),
+      price: toNum(f.price.value), side: f.side.value, payment: f.payment.value,
+      note: f.note.value.trim(), active: f.active.checked,
+      fast: f.fast.checked, interval: f.interval.value, nextMonth: f.fast.checked ? f.nextMonth.value : null
+    };
+    if (!data.address) {
+      el.querySelector('[data-err=address]').hidden = false;
+      f.address.focus();
+      return;
+    }
+    if (isNew) {
+      const dup = db.customers.find(x => normAddr(x.address) === normAddr(data.address));
+      if (dup && !confirm(`Der findes allerede en kunde på ${dup.address}${dup.name ? ' (' + dup.name + ')' : ''}. Gem alligevel?`)) return;
+      const nc = normCustomer(Object.assign({ id: uid(), createdAt: new Date().toISOString() }, data));
+      db.customers.push(nc);
+      if (opts.addToRound && curRound()) curRound().stops.push(stopFromCustomer(nc));
+      toast(opts.addToRound ? 'Kunde oprettet og tilføjet til runden' : 'Kunde oprettet');
+    } else {
+      Object.assign(c, normCustomer(Object.assign({}, c, data)));
+      syncCustomerToRound(c);
+      toast('Kunde gemt');
+    }
+    save();
+    close();
+    render();
+    if (opts.onDone) opts.onDone();
+  };
+  form.addEventListener('submit', e => { e.preventDefault(); doSave(); });
+  el.querySelector('[data-save]').addEventListener('click', doSave);
+  const del = el.querySelector('[data-delete]');
+  if (del) del.addEventListener('click', () => {
+    if (!confirm(`Slet ${custLabel(c)}?\n\nKunden fjernes fra registret. Tidligere runder bevares.`)) return;
+    db.customers = db.customers.filter(x => x.id !== c.id);
+    save(); close(); render(); toast('Kunde slettet');
+  });
+  if (isNew && !opts.source) setTimeout(() => form.address.focus(), 250);
+}
+
+function monthOptions(sel) {
+  const cur = monthKey();
+  const keys = [];
+  for (let i = -3; i <= 15; i++) keys.push(addMonths(cur, i));
+  if (sel && !keys.includes(sel)) { keys.push(sel); keys.sort(); }
+  return keys.map(k => `<option value="${k}" ${k === sel ? 'selected' : ''}>${esc(monthName(k))}${k === cur ? ' (denne måned)' : ''}</option>`).join('');
+}
+function defaultNext(c) {
+  const cur = monthKey();
+  const r = db.rounds[cur];
+  const done = c && r && r.stops.some(s => s.customerId === c.id && s.cleaned);
+  return done ? addMonths(cur, (c && c.interval) || 1) : cur;
+}
+
+function openQuickAdd(opts = {}) {
+  const canPaste = !!(navigator.clipboard && navigator.clipboard.readText);
+  const { el, close } = openSheet(`
+    <div class="sheet-head"><button class="link" data-close>Annullér</button><h2>Hurtig tilføj</h2><span></span></div>
+    <p class="muted" style="margin:14px 2px 0">Kopiér beskeden i Messenger, og sæt den ind her. Appen foreslår adresse og pris, som du retter til, før du gemmer.</p>
+    <textarea id="qaText" rows="8" placeholder="Fx: Hej! Kan du pudse mine vinduer? Jeg bor på Skovvej 12, 4000 Roskilde. 300 kr inde og ude, jeg betaler med MobilePay. Nøglen ligger under måtten."></textarea>
+    <div class="stack" style="margin-top:12px">
+      ${canPaste ? `<button class="btn btn-block" data-paste>Sæt ind fra udklipsholder</button>` : ''}
+      <button class="btn btn-primary btn-block" data-parse>Find adresse og pris</button>
+    </div>`);
+  const ta = el.querySelector('#qaText');
+  const paste = el.querySelector('[data-paste]');
+  if (paste) paste.addEventListener('click', async () => {
+    try { ta.value = await navigator.clipboard.readText(); } catch (e) { toast('Kunne ikke læse udklipsholderen – tryk og hold i feltet og vælg Indsæt'); }
+  });
+  el.querySelector('[data-parse]').addEventListener('click', () => {
+    const text = ta.value.trim();
+    if (!text) { ta.focus(); return; }
+    const p = parseMessage(text);
+    close();
+    openCustomerForm(null, { prefill: p.fields, found: p.found, source: text, addToRound: opts.addToRound, onDone: opts.onDone });
+  });
+}
+
+function openAddStop() {
+  const r = curRound();
+  if (!r) return;
+  let q = '';
+  const { el } = openSheet(`
+    <div class="sheet-head"><span></span><h2>Tilføj stop</h2><button class="link strong" data-close>Færdig</button></div>
+    <div class="toolbar" style="margin-top:14px">
+      <button class="btn" data-new>${ICON.plus} Ny kunde</button>
+      <button class="btn" data-quick>${ICON.bolt} Hurtig tilføj</button>
+    </div>
+    <div class="search">${ICON.search}<input type="search" id="pickSearch" placeholder="Søg i kunder" autocomplete="off"></div>
+    <div id="pickList"></div>`);
+  const list = el.querySelector('#pickList');
+  const draw = () => {
+    const inRound = new Set(r.stops.map(s => s.customerId));
+    const cands = sortCustomers(db.customers.filter(c => !inRound.has(c.id) && matches(c, q)));
+    list.innerHTML = cands.length
+      ? cands.map(c => `<div class="card pick ${c.active ? '' : 'inactive'}"><div class="pmain"><div class="addr">${esc(c.address)}</div>
+          <div class="muted">${c.name ? esc(c.name) + ' · ' : ''}${kr(c.price)} · ${esc(c.payment)}${c.active ? '' : ' · inaktiv'}${c.fast && c.nextMonth ? ' · næste ' + esc(monthShort(c.nextMonth)) : ''}</div></div>
+          <button class="btn btn-small btn-primary" data-add="${esc(c.id)}">Tilføj</button></div>`).join('')
+      : `<p class="muted" style="text-align:center">${db.customers.length ? 'Alle kunder er allerede med i runden.' : 'Ingen kunder endnu.'}</p>`;
+  };
+  draw();
+  el.querySelector('#pickSearch').addEventListener('input', e => { q = e.target.value; draw(); });
+  list.addEventListener('click', e => {
+    const b = e.target.closest('[data-add]');
+    if (!b) return;
+    const c = custById(b.dataset.add);
+    if (!c) return;
+    r.stops.push(stopFromCustomer(c));
+    save(); render(); draw();
+    toast(`${c.name || c.address} er tilføjet`);
+  });
+  el.querySelector('[data-new]').addEventListener('click', () => openCustomerForm(null, { addToRound: true, onDone: draw }));
+  el.querySelector('[data-quick]').addEventListener('click', () => openQuickAdd({ addToRound: true, onDone: draw }));
+}
+
+/* ---------- Handlinger ---------- */
+function fastDue(key) { return db.customers.filter(c => c.active && c.fast && isDue(c, key)); }
+function suggestMonth() {
+  const cur = monthKey();
+  if (!db.rounds[cur]) return cur;
+  const newest = newestRound();
+  return addMonths(newest > cur ? newest : cur, 1);
+}
+function showRound(key) { ui.viewMonth = key; ui.tab = 'runde'; render(); window.scrollTo(0, 0); }
+// Fortryd "Næste gang"-fremrykning for stop, der var markeret pudset i en runde
+function revertRound(r) {
+  for (const st of r.stops.slice().reverse()) {
+    const c = st.cleaned && st.prevNext !== undefined && custById(st.customerId);
+    if (c) c.nextMonth = st.prevNext;
+  }
+}
+function openNewMonth() {
+  const cur = monthKey();
+  let key = suggestMonth();
+  const opts = [];
+  for (let i = -2; i <= 6; i++) opts.push(addMonths(cur, i));
+  if (!opts.includes(key)) { opts.push(key); opts.sort(); }
+  const { el, close } = openSheet(`
+    <div class="sheet-head"><button class="link" data-close>Annullér</button><h2>Ny måned</h2><span></span></div>
+    <div class="form"><label class="f">Hvilken måned?<select id="nmMonth">${opts.map(k =>
+      `<option value="${k}" ${k === key ? 'selected' : ''}>${esc(monthName(k))}${k === cur ? ' (denne måned)' : ''}</option>`).join('')}</select></label></div>
+    <div id="nmBody"></div>`);
+  const body = el.querySelector('#nmBody');
+  const draw = () => {
+    const due = fastDue(key);
+    const exists = db.rounds[key];
+    const m = esc(monthName(key).toLowerCase());
+    body.innerHTML = `
+      <p style="margin:18px 2px 8px"><b>${due.length} ${due.length === 1 ? 'fast kunde' : 'faste kunder'}</b> skal pudses i ${m}.</p>
+      ${due.length ? `<div class="card" style="padding:4px 14px">${due.map(c =>
+        `<div class="nm-row"><span>${esc(c.address)}</span><span class="muted small">${esc(intervalLabel(c.interval))}</span></div>`).join('')}</div>` : ''}
+      <p class="muted small" style="margin:8px 2px 16px">Andre kunder tilføjer du selv med “Tilføj stop”, efterhånden som de svarer.</p>
+      ${exists
+        ? `<div class="reminder"><span>Der findes allerede en runde for ${m} (${exists.stops.length} stop).</span></div>
+           <div class="stack"><button class="btn btn-primary btn-block" data-go>Gå til runden</button>
+           <button class="btn btn-block btn-danger" data-redo>Lav den forfra</button></div>`
+        : `<button class="btn btn-primary btn-block" data-create>Opret runde${due.length ? ` med ${due.length} stop` : ''}</button>`}`;
+  };
+  draw();
+  el.querySelector('#nmMonth').addEventListener('change', e => { key = e.target.value; draw(); });
+  body.addEventListener('click', e => {
+    if (e.target.closest('[data-go]')) { close(); showRound(key); }
+    else if (e.target.closest('[data-create]')) { close(); createRound(key); }
+    else if (e.target.closest('[data-redo]') &&
+      confirm(`Lav runden for ${monthName(key).toLowerCase()} forfra?\n\nAlle stop og afkrydsninger for måneden går tabt.`)) { close(); createRound(key); }
+  });
+}
+function createRound(key) {
+  const existing = db.rounds[key];
+  if (existing) revertRound(existing);
+  const due = fastDue(key);
+  // Brug rækkefølgen fra den forrige runde, så din vante rækkefølge huskes
+  const prevKey = Object.keys(db.rounds).filter(k => k < key).sort().pop();
+  const src = existing || (prevKey ? db.rounds[prevKey] : null);
+  const order = new Map();
+  if (src) src.stops.forEach((st, i) => { if (st.customerId && !order.has(st.customerId)) order.set(st.customerId, i); });
+  const sorted = due.slice().sort((a, b) => {
+    const ia = order.has(a.id) ? order.get(a.id) : Infinity, ib = order.has(b.id) ? order.get(b.id) : Infinity;
+    return ia - ib || String(a.createdAt).localeCompare(String(b.createdAt));
+  });
+  db.rounds[key] = { month: key, createdAt: new Date().toISOString(), stops: sorted.map(stopFromCustomer) };
+  save();
+  showRound(key);
+  toast(`Runde for ${monthName(key).toLowerCase()} oprettet med ${sorted.length} stop`);
+}
+
+function openMapsList() {
+  const r = curRound();
+  if (!r) return;
+  const { el } = openSheet(`
+    <div class="sheet-head"><span></span><h2>Google Maps</h2><button class="link strong" data-close>Færdig</button></div>
+    <p class="muted small" style="margin:14px 2px 0">Google tillader ikke, at andre apps lægger adresser direkte på dine gemte lister. Så det går sådan her:</p>
+    <ol class="muted small steps">
+      <li>Tryk <b>Åbn næste</b>. Adressen åbner i Google Maps.</li>
+      <li>Tryk <b>Gem</b> i Google Maps, og vælg din liste.</li>
+      <li>Gå tilbage hertil. Adressen er sat flueben ved, og du tager den næste.</li>
+    </ol>
+    <div id="mlBody"></div>`);
+  const body = el.querySelector('#mlBody');
+  const draw = () => {
+    const todo = r.stops.filter(x => !x.mapSaved);
+    const next = todo[0];
+    body.innerHTML = `
+      <div class="stack" style="margin:14px 0 12px">
+        ${next
+          ? `<a class="btn btn-primary btn-block" href="${esc(placeUrl(next.address))}" target="_blank" rel="noopener" data-open="${esc(next.id)}">${ICON.map} Åbn næste: ${esc(next.address)}</a>`
+          : `<div class="info"><span>Alle ${r.stops.length} adresser er gemt.</span></div>`}
+        <p class="muted small" style="margin:6px 2px 0">${r.stops.length - todo.length} af ${r.stops.length} gemt</p>
+      </div>
+      ${r.stops.map((x, i) => `<div class="card ml-row ${x.mapSaved ? 'is-saved' : ''}">
+        <button class="ml-check" data-toggle="${esc(x.id)}" aria-pressed="${x.mapSaved}" aria-label="Markér som gemt"><span class="box">${ICON.check}</span></button>
+        <div class="pmain"><div class="addr">${i + 1}. ${esc(x.address)}</div>${x.name ? `<div class="muted small">${esc(x.name)}</div>` : ''}</div>
+        <a class="icon-btn" href="${esc(placeUrl(x.address))}" target="_blank" rel="noopener" data-open="${esc(x.id)}" aria-label="Åbn i Google Maps">${ICON.pin}</a>
+      </div>`).join('')}
+      <button class="btn btn-block" data-copy style="margin-top:6px">Kopiér alle adresser</button>
+      ${r.stops.some(x => x.mapSaved) ? '<button class="link danger" data-reset style="display:block;margin:8px auto 0">Fjern alle flueben</button>' : ''}`;
+  };
+  draw();
+  const byId = id => r.stops.find(x => x.id === id);
+  body.addEventListener('click', e => {
+    const o = e.target.closest('[data-open]');
+    if (o) {   // linket åbner Google Maps; markér adressen som gemt
+      const st = byId(o.dataset.open);
+      if (st) { st.mapSaved = true; save(); setTimeout(() => { draw(); render(); }, 400); }
+      return;
+    }
+    const t = e.target.closest('[data-toggle]');
+    if (t) { const st = byId(t.dataset.toggle); if (st) { st.mapSaved = !st.mapSaved; save(); draw(); render(); } return; }
+    if (e.target.closest('[data-copy]')) {
+      const text = r.stops.map(x => mapsAddr(x.address).replace(/, Danmark$/, '')).join('\n');
+      const done = () => toast(`${r.stops.length} adresser kopieret`);
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+      else fallbackCopy(text, done);
+      return;
+    }
+    if (e.target.closest('[data-reset]')) { r.stops.forEach(x => { x.mapSaved = false; }); save(); draw(); render(); }
+  });
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { alert(text); }
+  ta.remove();
+}
+
+function moveStop(id, dir) {
+  const r = curRound();
+  const i = r.stops.findIndex(s => s.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= r.stops.length) return;
+  [r.stops[i], r.stops[j]] = [r.stops[j], r.stops[i]];
+  save(); render();
+  const li = document.querySelector(`.stop[data-id="${CSS.escape(id)}"]`);
+  if (li) li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+async function exportBackup() {
+  const payload = Object.assign({ app: 'vinduespudser', exportedAt: new Date().toISOString() }, db);
+  const json = JSON.stringify(payload, null, 2);
+  const name = `vinduespudser-backup-${todayStr()}.json`;
+  let file = null;
+  try { file = new File([json], name, { type: 'application/json' }); } catch (e) { /* gammel browser */ }
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] });
+      markBackup();
+      toast('Backup gemt');
+    } catch (e) {
+      if (e && e.name === 'AbortError') toast('Backup annulleret');
+      else downloadFile(json, name);
+    }
+    return;
+  }
+  downloadFile(json, name);
+}
+function downloadFile(json, name) {
+  const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  markBackup();
+  toast('Backup hentet');
+}
+function markBackup() { db.lastBackup = new Date().toISOString(); save(); render(); }
+
+function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = normalize(JSON.parse(reader.result)); }
+    catch (e) { alert('Filen kunne ikke læses. Vælg en backupfil (.json) fra denne app.'); return; }
+    const raw = JSON.parse(reader.result);
+    const when = raw.exportedAt ? fmtDate(raw.exportedAt) : 'ukendt dato';
+    const n = Object.keys(data.rounds).length;
+    if (!confirm(`Importér backup fra ${when}?\n\nDen indeholder ${data.customers.length} kunder og ${n} ${n === 1 ? 'runde' : 'runder'}.\n\nDe nuværende data i appen bliver erstattet.`)) return;
+    data.lastBackup = raw.exportedAt || new Date().toISOString();
+    db = data;
+    ui.viewMonth = defaultMonth();
+    save(); render();
+    toast('Backup indlæst');
+  };
+  reader.onerror = () => alert('Filen kunne ikke læses.');
+  reader.readAsText(file);
+}
+
+let toastTimer;
+function toast(msg, action) {
+  const t = $('#toast');
+  t.innerHTML = `<span>${esc(msg)}</span>` + (action ? `<button type="button">${esc(action.label)}</button>` : '');
+  t.classList.toggle('has-action', !!action);
+  if (action) t.querySelector('button').onclick = () => { t.classList.remove('show', 'has-action'); action.fn(); };
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show', 'has-action'), action ? 5000 : 2400);
+}
+
+/* ---------- Klik ---------- */
+document.addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (tab) { ui.tab = tab.dataset.tab; render(); window.scrollTo(0, 0); return; }
+  if (e.target.closest('.overlay')) return;
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  const li = el.closest('.stop');
+  const r = curRound();
+  const stop = li && r ? r.stops.find(s => s.id === li.dataset.id) : null;
+
+  switch (act) {
+    case 'new-month': openNewMonth(); break;
+    case 'maps-list': openMapsList(); break;
+    case 'goto-current': showRound(defaultMonth()); break;
+    case 'goto-tab': ui.tab = el.dataset.tab; render(); window.scrollTo(0, 0); break;
+    case 'clean': if (stop) { toggleClean(stop, r); save(); render(); } break;
+    case 'cust-filter': ui.custFilter = el.dataset.f; render(); break;
+    case 'paid': if (stop) { stop.paid = !stop.paid; save(); render(); } break;
+    case 'up': if (stop) moveStop(stop.id, -1); break;
+    case 'down': if (stop) moveStop(stop.id, 1); break;
+    case 'remove':
+      if (stop) {
+        const idx = r.stops.indexOf(stop);
+        r.stops.splice(idx, 1); save(); render();
+        toast(`${stop.name || stop.address} er fjernet`, { label: 'Fortryd', fn: () => {
+          r.stops.splice(Math.min(idx, r.stops.length), 0, stop); save(); render();
+        } });
+      }
+      break;
+    case 'edit-stop-customer': {
+      const c = stop && custById(stop.customerId);
+      if (c) openCustomerForm(c); else toast('Kunden er slettet fra registret');
+      break;
+    }
+    case 'add-stop': openAddStop(); break;
+    case 'delete-round':
+      if (r && confirm(`Slet hele runden for ${monthName(ui.viewMonth).toLowerCase()}? Det kan ikke fortrydes.`)) {
+        revertRound(r); delete db.rounds[ui.viewMonth]; ui.viewMonth = defaultMonth(); save(); render(); toast('Runden er slettet');
+      }
+      break;
+    case 'new-customer': openCustomerForm(null); break;
+    case 'quick-add': openQuickAdd(); break;
+    case 'open-customer': { const c = custById(el.dataset.id); if (c) openCustomerForm(c); break; }
+    case 'open-month': showRound(el.dataset.month); break;
+    case 'export': exportBackup(); break;
+    case 'import': $('#importFile').value = ''; $('#importFile').click(); break;
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'custSearch') { ui.search = e.target.value; $('#custList').innerHTML = custListHtml(); }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'areaInput') { db.settings.area = e.target.value.trim(); save(); toast('Område gemt'); }
+});
+$('#importFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) importBackup(f); });
+
+/* ---------- Træk og slip ---------- */
+let drag = null;
+document.addEventListener('pointerdown', e => {
+  const handle = e.target.closest('.handle');
+  if (!handle || drag) return;
+  const li = handle.closest('.stop');
+  e.preventDefault();
+  try { handle.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+  drag = { li, list: li.parentElement, pid: e.pointerId, startY: e.clientY, y: e.clientY, raf: 0 };
+  li.classList.add('dragging');
+  document.body.classList.add('is-dragging');
+  const loop = () => {
+    if (!drag) return;
+    const edge = 90, bottomEdge = window.innerHeight - 160;
+    let v = 0;
+    if (drag.y < edge) v = -Math.ceil((edge - drag.y) / 6);
+    else if (drag.y > bottomEdge) v = Math.ceil((drag.y - bottomEdge) / 6);
+    if (v) {
+      const before = window.scrollY;
+      window.scrollBy(0, v);
+      const d = window.scrollY - before;
+      if (d) { drag.startY -= d; dragUpdate(); }
+    }
+    drag.raf = requestAnimationFrame(loop);
+  };
+  drag.raf = requestAnimationFrame(loop);
+});
+function setT() { drag.li.style.transform = `translateY(${drag.y - drag.startY}px)`; }
+function dragUpdate() {
+  const { li, list } = drag;
+  setT();
+  const r = li.getBoundingClientRect();
+  const mid = r.top + r.height / 2;
+  const prev = li.previousElementSibling, next = li.nextElementSibling;
+  if (prev) {
+    const p = prev.getBoundingClientRect();
+    if (mid < p.top + p.height / 2) {
+      const o = li.offsetTop; list.insertBefore(li, prev); drag.startY += li.offsetTop - o; setT(); renumber(); return;
+    }
+  }
+  if (next) {
+    const n = next.getBoundingClientRect();
+    if (mid > n.top + n.height / 2) {
+      const o = li.offsetTop; list.insertBefore(next, li); drag.startY += li.offsetTop - o; setT(); renumber();
+    }
+  }
+}
+function renumber() {
+  [...drag.list.children].forEach((x, i) => { const n = x.querySelector('.num'); if (n) n.textContent = i + 1; });
+}
+document.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.pid) return;
+  drag.y = e.clientY;
+  dragUpdate();
+});
+function endDrag(e) {
+  if (!drag || (e && e.pointerId !== drag.pid)) return;
+  cancelAnimationFrame(drag.raf);
+  const ids = [...drag.list.children].map(x => x.dataset.id);
+  drag.li.style.transform = '';
+  drag.li.classList.remove('dragging');
+  document.body.classList.remove('is-dragging');
+  drag = null;
+  const r = curRound();
+  if (r) {
+    const pos = new Map(ids.map((id, i) => [id, i]));
+    r.stops.sort((a, b) => pos.get(a.id) - pos.get(b.id));
+    save();
+  }
+  render();
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
+document.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, { passive: false });
+
+/* ---------- Opstart ---------- */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  render();
+});
+
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+
+window.__vp = { parseMessage, mapsAddr };
+render();
+})();
+</script>
+</body>
+</html>
