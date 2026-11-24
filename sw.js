@@ -1,6 +1,6 @@
 // Service worker: gør appen tilgængelig offline.
 // Skift VERSION, når du lægger en ny udgave online.
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = 'vinduespudser-' + VERSION;
 const ASSETS = [
   './',

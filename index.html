@@ -436,12 +436,21 @@ const custLabel = c => c.name ? c.name + ' – ' + c.address : c.address;
 function stopFromCustomer(c) {
   return { id: uid(), customerId: c.id, name: c.name, address: c.address, price: c.price, side: c.side, payment: c.payment, note: c.note, cleaned: false, paid: false };
 }
+// Kopiér kundens oplysninger over i runderne for denne måned og fremad
+// (og den runde, man står i). Ældre runder røres ikke, så historikken bevares.
 function syncCustomerToRound(c) {
-  const r = db.rounds[monthKey()];
-  if (!r) return;
-  for (const s of r.stops) {
-    if (s.customerId === c.id) Object.assign(s, { name: c.name, address: c.address, price: c.price, side: c.side, payment: c.payment, note: c.note });
+  const cur = monthKey();
+  let changed = false;
+  for (const [k, r] of Object.entries(db.rounds)) {
+    if (k < cur && k !== ui.viewMonth) continue;
+    for (const s of r.stops) {
+      if (s.customerId !== c.id) continue;
+      for (const f of ['name', 'address', 'price', 'side', 'payment', 'note']) {
+        if (s[f] !== c[f]) { s[f] = c[f]; changed = true; }
+      }
+    }
   }
+  return changed;
 }
 
 function stats(r) {
@@ -1294,6 +1303,8 @@ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
+
+if (db.customers.map(syncCustomerToRound).some(Boolean)) save();
 
 window.__vp = { parseMessage, mapsAddr };
 render();
